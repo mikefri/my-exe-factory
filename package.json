@@ -1,0 +1,21 @@
+{
+  "name": "usine-exe",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "build": "electron-builder --win"
+  },
+  "devDependencies": {
+    "electron": "latest",
+    "electron-builder": "latest"
+  },
+  "build": {
+    "appId": "com.monusine.app",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "portable" 
+    }
+  }
+}
