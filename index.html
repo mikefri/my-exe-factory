@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Web2Exe Factory</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 50px; background: #f4f4f9; }
+        .card { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: inline-block; }
+        input { padding: 10px; width: 300px; border: 1px solid #ddd; border-radius: 5px; }
+        button { padding: 10px 20px; background: #238636; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        #status { margin-top: 20px; color: #555; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Usine à .EXE 🚀</h1>
+        <p>Collez l'URL de votre fichier site.zip :</p>
+        <input type="text" id="zipUrl" placeholder="https://mon-site.com/site.zip">
+        <button onclick="lancerFabrication()">Fabriquer mon EXE</button>
+        <div id="status"></div>
+    </div>
+
+    <script>
+        async function lancerFabrication() {
+            const url = document.getElementById('zipUrl').value;
+            const status = document.getElementById('status');
+            
+            if(!url) return alert("Veuillez entrer une URL");
+
+            status.innerText = "Envoi de l'ordre à GitHub...";
+
+            const res = await fetch('/api/run-build', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ zip_url: url })
+            });
+
+            if(res.ok) {
+                status.innerHTML = "✅ Fabrication lancée ! <br>Revenez dans 3 min sur GitHub pour récupérer le fichier.";
+            } else {
+                status.innerText = "❌ Erreur lors du lancement.";
+            }
+        }
+    </script>
+</body>
+</html>
