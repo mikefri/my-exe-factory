@@ -1,19 +1,48 @@
+name: Build Website to EXE
+
 on:
   workflow_dispatch:
     inputs:
       zip_url:
-        description: 'URL du fichier ZIP'
+        description: 'URL du fichier ZIP hébergé sur file.io'
         required: true
 
 jobs:
   build:
     runs-on: windows-latest
+
     steps:
-      - uses: actions/checkout@v3
-      - name: Download Zip
-        run: Invoke-WebRequest -Uri ${{ github.event.inputs.zip_url }} -OutFile site.zip
-      - name: Build EXE
+      # 1. Récupérer le code de ton dépôt (qui contient main.js et package.json)
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Installer Node.js (nécessaire pour Electron)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      # 3. Télécharger le ZIP envoyé par ton site web
+      - name: Download Zip from Website
+        run: Invoke-WebRequest -Uri "${{ github.event.inputs.zip_url }}" -OutFile "site.zip"
+
+      # 4. Extraire le contenu du site dans le dossier /src
+      - name: Extract Website Files
         run: |
-          Expand-Archive site.zip src/
+          if (Test-Path src) { Remove-Item -Recurse -Force src }
+          Expand-Archive site.zip -DestinationPath src/
+
+      # 5. Installer les dépendances et compiler l'EXE
+      - name: Install and Build EXE
+        run: |
           npm install
           npm run build
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 6. Rendre le fichier .exe disponible au téléchargement
+      - name: Upload EXE Result
+        uses: actions/upload-artifact@v4
+        with:
+          name: MonApplication-Windows
+          path: dist/*.exe # Le dossier par défaut où electron-builder range l'EXE
