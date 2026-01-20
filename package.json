@@ -11,11 +11,16 @@
   },
   "build": {
     "appId": "com.monusine.app",
+    "productName": "Mon Application Web",
     "directories": {
       "output": "dist"
     },
     "win": {
-      "target": "portable" 
-    }
+      "target": "portable"
+    },
+    "files": [
+      "main.js",
+      "src/**/*"
+    ]
   }
 }
