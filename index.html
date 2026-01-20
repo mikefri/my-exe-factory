@@ -5,129 +5,238 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Web2Exe Cloud Factory</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
         :root {
-            --primary: #238636;
-            --primary-hover: #2ea043;
-            --bg: #0d1117;
-            --card-bg: #161b22;
-            --text: #c9d1d9;
-            --error: #f85149;
+            --primary-start: #4CAF50; /* Un vert plus doux */
+            --primary-end: #8BC34A; /* Un vert plus clair pour le dégradé */
+            --bg-dark: #1a1a2e; /* Fond très sombre, presque noir-violet */
+            --card-bg-light: rgba(255, 255, 255, 0.08); /* Fond transparent pour effet verre */
+            --text-light: #e0e0e0;
+            --text-muted: #b0b0b0;
+            --border-color: rgba(255, 255, 255, 0.15);
+            --error-color: #EF5350; /* Rouge vif pour les erreurs */
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #0f0f1d 100%); /* Dégradé de fond */
+            color: var(--text-light);
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
+            overflow: hidden; /* Pour éviter les scrollbars sur le fond */
         }
 
         .container {
-            background-color: var(--card-bg);
-            padding: 2rem;
-            border-radius: 12px;
-            border: 1px solid #30363d;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            background-color: var(--card-bg-light);
+            backdrop-filter: blur(10px); /* L'effet verre dépoli */
+            border: 1px solid var(--border-color);
+            border-radius: 18px; /* Plus arrondi */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); /* Ombre plus diffuse */
+            padding: 2.5rem;
             text-align: center;
-            max-width: 400px;
+            max-width: 450px; /* Un peu plus large */
             width: 90%;
+            transition: all 0.3s ease-in-out;
         }
 
-        h1 { color: white; margin-bottom: 0.5rem; }
-        p { color: #8b949e; font-size: 0.9rem; margin-bottom: 2rem; }
+        h1 { 
+            color: white; 
+            margin-bottom: 0.7rem; 
+            font-weight: 600; 
+            letter-spacing: 0.05em; 
+        }
+        p { 
+            color: var(--text-muted); 
+            font-size: 0.95rem; 
+            margin-bottom: 2.5rem; 
+        }
 
         .upload-area {
-            border: 2px dashed #30363d;
-            padding: 2rem;
-            border-radius: 8px;
-            margin-bottom: 1.5rem;
-            transition: border-color 0.3s;
+            border: 2px dashed var(--border-color);
+            padding: 2.5rem 1.5rem;
+            border-radius: 12px; /* Doucement arrondi */
+            margin-bottom: 2rem;
+            transition: border-color 0.3s ease-in-out, background-color 0.3s ease-in-out;
+            cursor: pointer;
+            position: relative;
         }
 
-        /* La fameuse barre de progression */
+        .upload-area:hover { 
+            border-color: var(--primary-end); 
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        input[type="file"] {
+            position: absolute; /* Rendre l'input invisible mais cliquable sur toute la zone */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+        
+        /* Nouveau style pour le label/placeholder du fichier */
+        .file-label {
+            display: block;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+            padding: 0 10px; /* Pour l'espace interne */
+        }
+        .file-label strong {
+            color: var(--text-light);
+        }
+
         .progress-container {
-            display: none; /* Caché par défaut */
-            background: #30363d;
-            border-radius: 10px;
-            height: 12px;
-            margin: 20px 0;
+            display: none;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px; /* Doucement arrondi */
+            height: 14px; /* Un peu plus épais */
+            margin: 25px 0;
             overflow: hidden;
             width: 100%;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3); /* Ombre interne */
         }
 
         .progress-bar {
-            background: var(--primary);
+            background: linear-gradient(90deg, var(--primary-start) 0%, var(--primary-end) 100%); /* Dégradé de base */
             width: 0%;
             height: 100%;
-            transition: width 0.4s ease, background-color 0.3s;
+            border-radius: 8px; /* Harmonisation avec le conteneur */
+            transition: width 0.6s ease-out, background-color 0.4s ease-in-out; /* Transition plus fluide */
+            box-shadow: 0 0 8px rgba(var(--primary-start), 0.5); /* Lueur subtile */
         }
 
         button {
-            background-color: var(--primary);
+            background: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-end) 100%);
             color: white;
             border: none;
-            padding: 12px 24px;
-            border-radius: 6px;
-            font-weight: bold;
+            padding: 14px 28px;
+            border-radius: 10px; /* Plus arrondi */
+            font-weight: 600;
             cursor: pointer;
             width: 100%;
-            transition: background 0.2s;
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0 5px 15px rgba(var(--primary-start), 0.3); /* Ombre colorée */
         }
 
-        button:hover { background-color: var(--primary-hover); }
-        button:disabled { background-color: #21262d; cursor: not-allowed; color: #484f58; }
+        button:hover { 
+            transform: translateY(-2px); /* Léger effet de soulèvement */
+            box-shadow: 0 8px 20px rgba(var(--primary-start), 0.4); 
+            opacity: 0.9;
+        }
+        button:disabled { 
+            background: #2b2b3f; /* Couleur discrète */
+            cursor: not-allowed; 
+            color: #6a6a7a; 
+            transform: translateY(0);
+            box-shadow: none;
+        }
 
         .btn-download {
             display: inline-block;
-            margin-top: 15px;
-            padding: 15px 25px;
-            background: var(--primary);
+            margin-top: 20px;
+            padding: 16px 30px;
+            background: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-end) 100%);
             color: white;
             text-decoration: none;
-            border-radius: 6px;
-            font-weight: bold;
+            border-radius: 10px;
+            font-weight: 600;
+            box-shadow: 0 5px 15px rgba(var(--primary-start), 0.3);
+            transition: all 0.3s ease-in-out;
         }
+        .btn-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(var(--primary-start), 0.4);
+            opacity: 0.9;
+        }
+        
+        #status {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            min-height: 20px; /* Pour éviter les sauts */
+        }
+
+        /* Effet de lueur subtile sur le conteneur */
+        .container::before {
+            content: '';
+            position: absolute;
+            top: -20px; left: -20px;
+            right: -20px; bottom: -20px;
+            background: radial-gradient(circle at 50% 50%, rgba(var(--primary-start), 0.1), transparent 70%);
+            z-index: -1;
+            filter: blur(50px);
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>Usine à .EXE 🚀</h1>
-    <p>Transformez votre site (ZIP) en application Windows.</p>
+    <p>Transformez n'importe quel site web (ZIP) en application Windows portable.</p>
 
     <div class="upload-area">
         <input type="file" id="fileInput" accept=".zip">
+        <span id="fileLabel" class="file-label">📥 Glissez ou <strong>cliquez</strong> pour sélectionner votre ZIP</span>
     </div>
 
     <div id="progressContainer" class="progress-container">
         <div id="progressBar" class="progress-bar"></div>
     </div>
 
-    <button id="btn" onclick="lancerProcessus()">Générer mon application</button>
+    <button id="btn" onclick="lancerProcessus()">Lancer la fabrication</button>
 
-    <div id="status" style="margin-top: 15px; font-size: 0.9rem;">Prêt à l'emploi.</div>
+    <div id="status">Prêt à démarrer.</div>
 </div>
 
 <script>
+    const fileInput = document.getElementById('fileInput');
+    const fileLabel = document.getElementById('fileLabel');
+    const btn = document.getElementById('btn');
+    const statusDiv = document.getElementById('status');
+    const progressBar = document.getElementById('progressBar');
+    const progressContainer = document.getElementById('progressContainer');
+
+    // Mise à jour du label du fichier
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files.length > 0) {
+            fileLabel.innerHTML = `📦 Fichier sélectionné : <strong>${fileInput.files[0].name}</strong>`;
+            btn.disabled = false; // Activer le bouton si un fichier est sélectionné
+        } else {
+            fileLabel.innerHTML = `📥 Glissez ou <strong>cliquez</strong> pour sélectionner votre ZIP`;
+            btn.disabled = true; // Désactiver si aucun fichier
+        }
+    });
+
+    // Initialiser le bouton comme désactivé
+    btn.disabled = true;
+
     function updateProgress(percent, message, isError = false) {
-        const progressBar = document.getElementById('progressBar');
-        const status = document.getElementById('status');
-        
         progressBar.style.width = percent + "%";
-        status.innerHTML = message;
+        statusDiv.innerHTML = message;
         
         if (isError) {
-            progressBar.style.backgroundColor = "var(--error)";
+            progressBar.style.backgroundColor = "var(--error-color)";
+            progressBar.style.boxShadow = `0 0 8px rgba(var(--error-color), 0.5)`;
+        } else {
+             // Réinitialise la couleur au dégradé normal si ce n'est pas une erreur
+            progressBar.style.background = `linear-gradient(90deg, var(--primary-start) 0%, var(--primary-end) 100%)`;
+            progressBar.style.boxShadow = `0 0 8px rgba(var(--primary-start), 0.5)`;
         }
     }
 
     async function lancerProcessus() {
-        const fileInput = document.getElementById('fileInput');
-        const btn = document.getElementById('btn');
-        const container = document.getElementById('progressContainer');
         const file = fileInput.files[0];
 
         if (!file) {
@@ -135,13 +244,15 @@
             return;
         }
 
-        // Démarrage
+        // Réinitialisation pour un nouveau lancement
         btn.disabled = true;
-        container.style.display = "block";
-        updateProgress(10, "⏳ Étape 1 : Téléchargement du ZIP...");
+        progressContainer.style.display = "block";
+        progressBar.style.backgroundColor = ""; // Réinitialise la couleur au cas où il y ait eu une erreur avant
+        updateProgress(5, "⏳ Préparation..."); 
 
         try {
             // 1. Upload
+            updateProgress(15, "☁️ Étape 1/3 : Hébergement du ZIP...");
             const formData = new FormData();
             formData.append('file', file);
             const uploadRes = await fetch('https://tmpfiles.org/api/v1/upload', { method: 'POST', body: formData });
@@ -151,17 +262,17 @@
             const publicZipUrl = uploadData.data.url.replace('https://tmpfiles.org/', 'https://tmpfiles.org/dl/');
 
             // 2. GitHub
-            updateProgress(40, "🚀 Étape 2 : Lancement de l'usine GitHub...");
+            updateProgress(45, "🚀 Étape 2/3 : Lancement de l'usine GitHub...");
             const githubRes = await fetch('/api/run-build', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ zip_url: publicZipUrl })
             });
 
-            if (!githubRes.ok) throw new Error("GitHub ne répond pas.");
+            if (!githubRes.ok) throw new Error("GitHub ne répond pas. Vérifiez votre Token.");
 
             // 3. Attente
-            updateProgress(70, "🏗️ Étape 3 : Compilation du .EXE (3-5 min)...");
+            updateProgress(75, "🏗️ Étape 3/3 : Compilation du .EXE (cela peut prendre quelques minutes)...");
             
             const checkInterval = setInterval(async () => {
                 try {
@@ -170,15 +281,25 @@
 
                     if (checkData.url) {
                         clearInterval(checkInterval);
-                        updateProgress(100, "✨ Votre application est prête !");
-                        document.getElementById('status').innerHTML += `<br><br><a href="${checkData.url}" class="btn-download">⬇️ TÉLÉCHARGER</a>`;
+                        updateProgress(100, "✅ Votre application est prête !");
+                        statusDiv.innerHTML += `<br><br><a href="${checkData.url}" class="btn-download">⬇️ TÉLÉCHARGER LE .EXE</a>`;
+                        btn.style.display = 'none'; // Cache le bouton "Générer"
+                    } else {
+                        // Progression subtile pendant l'attente
+                        let currentWidth = parseInt(progressBar.style.width);
+                        if (currentWidth < 95) { // Ne va pas jusqu'à 100% pour laisser la fin à la réussite
+                             progressBar.style.width = (currentWidth + 1) + "%";
+                        }
                     }
-                } catch (e) {}
-            }, 15000);
-
+                } catch (e) {
+                    console.log("Vérification en cours...");
+                }
+            }, 10000); // Vérification toutes les 10 secondes pour une meilleure fluidité
         } catch (error) {
-            updateProgress(100, "❌ Erreur : " + error.message, true);
+            updateProgress(100, `❌ Erreur : ${error.message}`, true);
             btn.disabled = false;
+            progressContainer.style.display = "block"; // S'assurer que la barre reste visible en cas d'erreur
+            progressBar.style.width = "100%"; // Barre rouge pleine
         }
     }
 </script>
