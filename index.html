@@ -117,10 +117,10 @@
         // Verrouiller l'interface
         btn.disabled = true;
         loader.style.display = "block";
-        status.innerHTML = "⏳ Étape 1/2 : Hébergement du ZIP...";
+        status.innerHTML = "⏳ Étape 1/3 : Hébergement du ZIP...";
 
         try {
-            // 1. Envoyer le fichier vers file.io (stockage temporaire gratuit)
+            // 1. Envoyer le fichier vers file.io
             const formData = new FormData();
             formData.append('file', file);
 
@@ -130,37 +130,50 @@
             });
             const uploadData = await uploadRes.json();
 
-            if (!uploadData.success) throw new Error("Échec de l'upload");
+            if (!uploadData.success) throw new Error("Échec de l'upload vers file.io");
 
             const publicZipUrl = uploadData.link;
-            status.innerHTML = "⏳ Étape 2/2 : Demande de fabrication à GitHub...";
+            status.innerHTML = "⏳ Étape 2/3 : Demande de fabrication à GitHub...";
 
-            // 2. Appeler ton API Vercel qui va déclencher GitHub Actions
+            // 2. Appeler ton API Vercel pour déclencher GitHub Actions
             const githubRes = await fetch('/api/run-build', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ zip_url: publicZipUrl })
             });
 
-            if (githubRes.ok) {
-                status.innerHTML = `
-                    <b style="color: #3fb950;">✅ Ordre reçu par l'usine !</b><br>
-                    Le serveur Windows est en train de compiler votre .exe.<br><br>
-                    <small>Revenez dans environ 3 à 5 minutes sur votre dépôt GitHub pour télécharger le résultat dans l'onglet "Actions".</small>
-                `;
-            } else {
-                throw new Error("Erreur lors de la communication avec l'API");
-            }
+            if (!githubRes.ok) throw new Error("Erreur lors de l'envoi à l'usine.");
+
+            // 3. Boucle de vérification (Solution 3)
+            status.innerHTML = "⏳ Étape 3/3 : Compilation en cours... <br><small>Cela prend environ 3 à 4 minutes. Ne fermez pas cette page.</small>";
+
+            const checkInterval = setInterval(async () => {
+                try {
+                    const checkRes = await fetch('/api/check-build');
+                    const checkData = await checkRes.json();
+
+                    if (checkData.url) {
+                        clearInterval(checkInterval); // On arrête la boucle
+                        loader.style.display = "none";
+                        status.innerHTML = `
+                            <b style="color: #3fb950;">✨ Votre application est prête !</b><br><br>
+                            <a href="${checkData.url}" target="_blank" style="display:inline-block; padding:15px 25px; background:#238636; color:white; text-decoration:none; border-radius:6px; font-weight:bold;">
+                               ⬇️ TÉLÉCHARGER LE .EXE
+                            </a>
+                        `;
+                    }
+                } catch (e) {
+                    console.log("En attente du build...");
+                }
+            }, 15000); // Vérifie toutes les 15 secondes
 
         } catch (error) {
             console.error(error);
             status.innerHTML = `<b style="color: #f85149;">❌ Erreur :</b> ${error.message}`;
             btn.disabled = false;
-        } finally {
             loader.style.display = "none";
         }
     }
 </script>
-
 </body>
 </html>
