@@ -1,0 +1,19 @@
+on:
+  workflow_dispatch:
+    inputs:
+      zip_url:
+        description: 'URL du fichier ZIP'
+        required: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Download Zip
+        run: Invoke-WebRequest -Uri ${{ github.event.inputs.zip_url }} -OutFile site.zip
+      - name: Build EXE
+        run: |
+          Expand-Archive site.zip src/
+          npm install
+          npm run build
