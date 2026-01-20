@@ -48,7 +48,7 @@
 
         .upload-area:hover { border-color: var(--primary); }
 
-        input[type="file"] { margin-bottom: 1rem; color: #8b949e; }
+        input[type="file"] { margin-bottom: 1rem; color: #8b949e; width: 100%; }
 
         button {
             background-color: var(--primary);
@@ -77,12 +77,23 @@
             border: 3px solid #30363d;
             border-top: 3px solid var(--primary);
             border-radius: 50%;
-            width: 20px;
-            height: 20px;
+            width: 25px;
+            height: 25px;
             animation: spin 1s linear infinite;
         }
 
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .btn-download {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 15px 25px;
+            background: var(--primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -117,38 +128,42 @@
         // Verrouiller l'interface
         btn.disabled = true;
         loader.style.display = "block";
-        status.innerHTML = "⏳ Étape 1/3 : Hébergement du ZIP...";
+        status.innerHTML = "⏳ Étape 1/3 : Hébergement du ZIP (via tmpfiles.org)...";
 
         try {
-            // 1. Envoyer le fichier vers file.io
+            // 1. Envoyer le fichier vers tmpfiles.org (plus stable que file.io pour Vercel)
             const formData = new FormData();
             formData.append('file', file);
 
-            const uploadRes = await fetch('https://file.io/?expires=1d', {
+            const uploadRes = await fetch('https://tmpfiles.org/api/v1/upload', {
                 method: 'POST',
                 body: formData
             });
+
+            if (!uploadRes.ok) throw new Error("L'hébergement du fichier a échoué.");
+            
             const uploadData = await uploadRes.json();
+            
+            // Transformation du lien pour le téléchargement direct
+            const viewUrl = uploadData.data.url;
+            const publicZipUrl = viewUrl.replace('https://tmpfiles.org/', 'https://tmpfiles.org/dl/');
 
-            if (!uploadData.success) throw new Error("Échec de l'upload vers file.io");
+            status.innerHTML = "⏳ Étape 2/3 : Envoi de l'ordre à GitHub...";
 
-            const publicZipUrl = uploadData.link;
-            status.innerHTML = "⏳ Étape 2/3 : Demande de fabrication à GitHub...";
+            // 2. Appeler ton API Vercel
+            const githubRes = await fetch('/api/run-build', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json' 
+                },
+                body: JSON.stringify({ zip_url: publicZipUrl })
+            });
 
-            // 2. Appeler ton API Vercel pour déclencher GitHub Actions
-const githubRes = await fetch('/api/run-build', {
-    method: 'POST',
-    headers: { 
-        'Content-Type': 'application/json',
-        'Accept': 'application/json' 
-    },
-    body: JSON.stringify({ zip_url: publicZipUrl })
-});
+            if (!githubRes.ok) throw new Error("GitHub refuse de lancer la fabrication. Vérifiez votre Token.");
 
-            if (!githubRes.ok) throw new Error("Erreur lors de l'envoi à l'usine.");
-
-            // 3. Boucle de vérification (Solution 3)
-            status.innerHTML = "⏳ Étape 3/3 : Compilation en cours... <br><small>Cela prend environ 3 à 4 minutes. Ne fermez pas cette page.</small>";
+            // 3. Boucle de vérification
+            status.innerHTML = "⏳ Étape 3/3 : Compilation en cours...<br><small>Environ 3 minutes. Gardez cette page ouverte.</small>";
 
             const checkInterval = setInterval(async () => {
                 try {
@@ -156,19 +171,19 @@ const githubRes = await fetch('/api/run-build', {
                     const checkData = await checkRes.json();
 
                     if (checkData.url) {
-                        clearInterval(checkInterval); // On arrête la boucle
+                        clearInterval(checkInterval);
                         loader.style.display = "none";
                         status.innerHTML = `
                             <b style="color: #3fb950;">✨ Votre application est prête !</b><br><br>
-                            <a href="${checkData.url}" target="_blank" style="display:inline-block; padding:15px 25px; background:#238636; color:white; text-decoration:none; border-radius:6px; font-weight:bold;">
+                            <a href="${checkData.url}" target="_blank" class="btn-download">
                                ⬇️ TÉLÉCHARGER LE .EXE
                             </a>
                         `;
                     }
                 } catch (e) {
-                    console.log("En attente du build...");
+                    console.log("Compilation toujours en cours...");
                 }
-            }, 15000); // Vérifie toutes les 15 secondes
+            }, 15000); // Vérification toutes les 15 secondes
 
         } catch (error) {
             console.error(error);
@@ -178,5 +193,6 @@ const githubRes = await fetch('/api/run-build', {
         }
     }
 </script>
+
 </body>
 </html>
