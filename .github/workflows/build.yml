@@ -22,40 +22,39 @@ jobs:
         with:
           node-version: 18
 
-      - name: Download and Verify
+      - name: Download and Extract
         shell: pwsh
         run: |
-          # Téléchargement avec un "User-Agent" pour éviter d'être bloqué
-          $client = New-Object System.Net.WebClient
-          $client.Headers.Add("User-Agent", "Mozilla/5.0")
-          $client.DownloadFile("${{ github.event.inputs.zip_url }}", "site.zip")
-          
-          # Vérification de la taille (si < 1ko, c'est une erreur)
-          $size = (Get-Item site.zip).Length
-          if ($size -lt 1000) { throw "Le fichier téléchargé est trop petit ou invalide." }
+          Invoke-WebRequest -Uri "${{ github.event.inputs.zip_url }}" -OutFile "site.zip"
+          if (Test-Path "src") { Remove-Item -Recurse -Force "src" }
+          New-Item -ItemType Directory -Path "src"
+          Expand-Archive -Path "site.zip" -DestinationPath "src" -Force
 
-      - name: Extract Website Files
-        shell: cmd
-        run: |
-          if exist src rmdir /s /q src
-          mkdir src
-          powershell Expand-Archive -Path site.zip -DestinationPath src -Force
-
-      - name: Install and Build
+      - name: Install and Build EXE
         shell: cmd
         run: |
           cd src
           npm install
           npm run build
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check for EXE
+        shell: pwsh
+        run: |
+          # On cherche où est le .exe et on le remonte à la racine
+          $exe = Get-ChildItem -Path "src" -Filter "*.exe" -Recurse | Select-Object -First 1
+          if ($exe) {
+            Write-Host "Fichier trouvé : $($exe.FullName)"
+            Copy-Item $exe.FullName -Destination "app_finale.exe"
+          } else {
+            Write-Error "Aucun fichier .exe n'a été généré !"
+            exit 1
+          }
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
-        if: success()
         with:
           tag_name: "v${{ github.run_number }}"
           name: "Application Prête - Build ${{ github.run_number }}"
-          files: "src/dist/*.exe"
+          files: "app_finale.exe"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
