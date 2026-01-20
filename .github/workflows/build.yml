@@ -22,20 +22,29 @@ jobs:
         with:
           node-version: 18
 
-      - name: Download Zip
-        shell: cmd
-        run: curl -L "${{ github.event.inputs.zip_url }}" -o site.zip
+      - name: Download and Verify
+        shell: pwsh
+        run: |
+          # Téléchargement avec un "User-Agent" pour éviter d'être bloqué
+          $client = New-Object System.Net.WebClient
+          $client.Headers.Add("User-Agent", "Mozilla/5.0")
+          $client.DownloadFile("${{ github.event.inputs.zip_url }}", "site.zip")
+          
+          # Vérification de la taille (si < 1ko, c'est une erreur)
+          $size = (Get-Item site.zip).Length
+          if ($size -lt 1000) { throw "Le fichier téléchargé est trop petit ou invalide." }
 
       - name: Extract Website Files
         shell: cmd
         run: |
           if exist src rmdir /s /q src
           mkdir src
-          tar -xf site.zip -C src/
+          powershell Expand-Archive -Path site.zip -DestinationPath src -Force
 
       - name: Install and Build
         shell: cmd
         run: |
+          cd src
           npm install
           npm run build
         env:
@@ -47,6 +56,6 @@ jobs:
         with:
           tag_name: "v${{ github.run_number }}"
           name: "Application Prête - Build ${{ github.run_number }}"
-          files: "**/*.exe"
+          files: "src/dist/*.exe"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
