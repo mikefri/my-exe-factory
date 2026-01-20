@@ -21,15 +21,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
-          cache: 'npm'
+          # J'ai supprimé la ligne "cache" qui causait l'erreur 🚀
 
       - name: Download and Extract
         shell: pwsh
         run: |
-          # Téléchargement avec un timeout pour éviter l'erreur OperationStopped
-          $ProgressPreference = 'SilentlyContinue'
-          Invoke-WebRequest -Uri "${{ github.event.inputs.zip_url }}" -OutFile "site.zip" -TimeoutSec 60
-          
+          curl -L -o site.zip "${{ github.event.inputs.zip_url }}"
           if (Test-Path "src") { Remove-Item -Recurse -Force "src" }
           New-Item -ItemType Directory -Path "src"
           Expand-Archive -Path "site.zip" -DestinationPath "src" -Force
@@ -43,13 +40,11 @@ jobs:
       - name: Prepare Release File
         shell: pwsh
         run: |
-          # Electron-builder range le portable dans le dossier 'dist'
           $exe = Get-ChildItem -Path "dist" -Filter "*.exe" -Recurse | Select-Object -First 1
           if ($exe) {
-            Write-Host "Logiciel trouvé : $($exe.FullName)"
             Copy-Item $exe.FullName -Destination "Application_Web.exe"
           } else {
-            Write-Error "Le dossier dist est vide, la compilation a échoué."
+            Write-Error "Compilation réussie mais aucun .exe trouvé dans le dossier dist."
             exit 1
           }
 
