@@ -22,21 +22,19 @@ jobs:
         with:
           node-version: 18
 
-      - name: Download and Extract
-        shell: pwsh
+      - name: Download Zip
+        shell: cmd
+        run: curl -L "${{ github.event.inputs.zip_url }}" -o site.zip
+
+      - name: Extract Website Files
+        shell: cmd
         run: |
-          # 1. Téléchargement
-          Invoke-WebRequest -Uri "${{ github.event.inputs.zip_url }}" -OutFile "site.zip"
-          
-          # 2. Création propre du dossier src
-          if (Test-Path "src") { Remove-Item -Recurse -Force "src" }
-          New-Item -ItemType Directory -Path "src"
-          
-          # 3. Extraction simplifiée
-          Expand-Archive -Path "site.zip" -DestinationPath "src" -Force
+          if exist src rmdir /s /q src
+          mkdir src
+          tar -xf site.zip -C src/
 
       - name: Install and Build
-        shell: pwsh
+        shell: cmd
         run: |
           npm install
           npm run build
