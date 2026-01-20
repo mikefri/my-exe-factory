@@ -21,11 +21,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
+          cache: 'npm'
 
       - name: Download and Extract
         shell: pwsh
         run: |
-          Invoke-WebRequest -Uri "${{ github.event.inputs.zip_url }}" -OutFile "site.zip"
+          # Téléchargement avec un timeout pour éviter l'erreur OperationStopped
+          $ProgressPreference = 'SilentlyContinue'
+          Invoke-WebRequest -Uri "${{ github.event.inputs.zip_url }}" -OutFile "site.zip" -TimeoutSec 60
+          
           if (Test-Path "src") { Remove-Item -Recurse -Force "src" }
           New-Item -ItemType Directory -Path "src"
           Expand-Archive -Path "site.zip" -DestinationPath "src" -Force
@@ -33,20 +37,19 @@ jobs:
       - name: Install and Build EXE
         shell: cmd
         run: |
-          cd src
           npm install
           npm run build
 
-      - name: Check for EXE
+      - name: Prepare Release File
         shell: pwsh
         run: |
-          # On cherche où est le .exe et on le remonte à la racine
-          $exe = Get-ChildItem -Path "src" -Filter "*.exe" -Recurse | Select-Object -First 1
+          # Electron-builder range le portable dans le dossier 'dist'
+          $exe = Get-ChildItem -Path "dist" -Filter "*.exe" -Recurse | Select-Object -First 1
           if ($exe) {
-            Write-Host "Fichier trouvé : $($exe.FullName)"
-            Copy-Item $exe.FullName -Destination "app_finale.exe"
+            Write-Host "Logiciel trouvé : $($exe.FullName)"
+            Copy-Item $exe.FullName -Destination "Application_Web.exe"
           } else {
-            Write-Error "Aucun fichier .exe n'a été généré !"
+            Write-Error "Le dossier dist est vide, la compilation a échoué."
             exit 1
           }
 
@@ -55,6 +58,6 @@ jobs:
         with:
           tag_name: "v${{ github.run_number }}"
           name: "Application Prête - Build ${{ github.run_number }}"
-          files: "app_finale.exe"
+          files: "Application_Web.exe"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
