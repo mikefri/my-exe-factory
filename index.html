@@ -136,11 +136,14 @@
             status.innerHTML = "⏳ Étape 2/3 : Demande de fabrication à GitHub...";
 
             // 2. Appeler ton API Vercel pour déclencher GitHub Actions
-            const githubRes = await fetch('/api/run-build', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ zip_url: publicZipUrl })
-            });
+const githubRes = await fetch('/api/run-build', {
+    method: 'POST',
+    headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json' 
+    },
+    body: JSON.stringify({ zip_url: publicZipUrl })
+});
 
             if (!githubRes.ok) throw new Error("Erreur lors de l'envoi à l'usine.");
 
