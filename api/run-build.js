@@ -4,7 +4,7 @@ export default async function handler(req, res) {
   const { zip_url } = req.body;
 
   // C'est ici qu'on parle à GitHub
-  const githubRes = await fetch('https://api.github.com/repos/TON_NOM_GITHUB/TON_DEPOT/actions/workflows/build.yml/dispatches', {
+  const githubRes = await fetch('https://api.github.com/repos/mikefri/my-exe-factory/actions/workflows/build.yml/dispatches', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`, // On utilise une variable d'environnement
