@@ -1,7 +1,7 @@
 export default async function handler(req, res) {
   try {
     // On demande à GitHub quelle est la toute dernière release
-    const response = await fetch(`https://api.github.com/repos/TON_USER/TON_DEPOT/releases/latest`, {
+    const response = await fetch(`https://api.github.com/repos/mikefri/my-exe-factory/releases/latest`, {
       headers: { 
         'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`,
         'Accept': 'application/vnd.github.v3+json'
