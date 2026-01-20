@@ -11,7 +11,7 @@ jobs:
   build:
     runs-on: windows-latest
     permissions:
-      contents: write # TRÈS IMPORTANT pour permettre la création de la Release
+      contents: write # Autorise la création de la Release
 
     steps:
       - name: Checkout repository
@@ -37,23 +37,16 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Suppression des anciennes releases pour ne pas encombrer le dépôt
-      - name: Delete old Releases
-        uses: dev-drprasad/delete-older-releases@v0.3.2
-        with:
-          keep_latest: 0
-          delete_tags: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # Création de la nouvelle Release avec le fichier EXE
+      # Création de la Release avec un Tag unique (basé sur le numéro de build)
+      # Cela évite les erreurs de conflit si "latest-build" existe déjà
       - name: Create Release
         uses: softprops/action-gh-release@v1
+        if: success()
         with:
-          tag_name: "latest-build"
-          name: "Votre application est prête"
+          tag_name: "v${{ github.run_number }}"
+          name: "Application Prête - Build ${{ github.run_number }}"
           draft: false
           prerelease: false
-          files: dist/*.exe
+          files: dist/*.exe # Vérifie bien que ton logiciel crée le .exe dans le dossier dist/
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
