@@ -6,6 +6,13 @@ on:
       zip_url:
         description: 'URL du fichier ZIP'
         required: true
+      app_name:
+        description: 'Nom de l'application'
+        required: false
+        default: 'MaSuperApp'
+      icon_url:
+        description: 'URL du fichier ICO'
+        required: false
 
 jobs:
   build:
@@ -25,6 +32,7 @@ jobs:
       - name: Download and Extract
         shell: pwsh
         run: |
+          # Gestion du ZIP
           $url = "${{ github.event.inputs.zip_url }}"
           if ($url -like "*tmpfiles.org*" -and $url -notlike "*/dl/*") {
             $url = $url -replace "tmpfiles.org/", "tmpfiles.org/dl/"
@@ -38,12 +46,40 @@ jobs:
           New-Item -ItemType Directory -Path "src"
           Expand-Archive -Path "site.zip" -DestinationPath "src" -Force
           
+          # Gestion de l'ICÔNE (si présente)
+          $iconUrl = "${{ github.event.inputs.icon_url }}"
+          if ($iconUrl -ne "") {
+              if ($iconUrl -like "*tmpfiles.org*" -and $iconUrl -notlike "*/dl/*") {
+                $iconUrl = $iconUrl -replace "tmpfiles.org/", "tmpfiles.org/dl/"
+              }
+              Write-Host "Téléchargement de l'icône depuis : $iconUrl"
+              Invoke-WebRequest -Uri $iconUrl -OutFile "app_icon.ico" -Headers $headers
+          }
+          
           Write-Host "--- CONTENU DU DOSSIER SRC APRÈS EXTRACTION ---"
           Get-ChildItem -Path "src" -Recurse | Select-Object FullName
-          # Cette liste nous dira si le index.html est bien là ou caché dans un sous-dossier
+
+      - name: Inject Custom Name and Icon
+        shell: pwsh
+        run: |
+          $jsonPath = "package.json"
+          $json = Get-Content $jsonPath | ConvertFrom-Json
+          
+          # Mise à jour du nom du produit
+          $name = "${{ github.event.inputs.app_name }}"
+          $json.build.productName = $name
+          Write-Host "Nom injecté dans package.json : $name"
+          
+          # Vérification de l'icône dans le JSON
+          if (-not (Test-Path "app_icon.ico")) {
+             Write-Host "Aucune icône trouvée, suppression de la référence dans le build."
+             $json.build.win.PSObject.Properties.Remove('icon')
+          }
+          
+          $json | ConvertTo-Json -Depth 10 | Set-Content $jsonPath
 
       - name: Install and Build EXE
-        shell: pwsh # On passe en pwsh pour mieux voir les erreurs npm
+        shell: pwsh
         run: |
           npm install
           Write-Host "Lancement de la compilation Electron..."
@@ -59,15 +95,20 @@ jobs:
       - name: Prepare Release File
         shell: pwsh
         run: |
-          # On cherche n'importe quel .exe de manière très large dans dist
+          # Nettoyage du nom pour le fichier final
+          $rawName = "${{ github.event.inputs.app_name }}"
+          $safeName = $rawName -replace '[^a-zA-Z0-9_\-]', '_'
+          
           $exe = Get-ChildItem -Path "dist" -Filter "*.exe" -Recurse | Select-Object -First 1
           
           if ($exe) {
             Write-Host "EXE trouvé : $($exe.FullName)"
-            Copy-Item $exe.FullName -Destination "Application_Web.exe"
+            $finalPath = "$safeName.exe"
+            Copy-Item $exe.FullName -Destination $finalPath
+            # On stocke le nom pour l'étape suivante
+            echo "FINAL_EXE_NAME=$finalPath" >> $env:GITHUB_ENV
           } else {
             Write-Host "ERREUR : Aucun .exe trouvé dans le dossier dist."
-            Write-Host "Contenu actuel de dist pour comprendre :"
             Get-ChildItem -Path "dist" -Recurse
             exit 1
           }
@@ -76,7 +117,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: "v${{ github.run_number }}"
-          name: "Application Prête - Build ${{ github.run_number }}"
-          files: "Application_Web.exe"
+          name: "${{ github.event.inputs.app_name }} - v${{ github.run_number }}"
+          files: "${{ env.FINAL_EXE_NAME }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
