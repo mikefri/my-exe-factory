@@ -5,288 +5,336 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Web2Exe Cloud Factory</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600&family=JetBrains+Mono:wght@500&display=swap');
 
         :root {
-            --primary-start: #4CAF50; 
-            --primary-end: #8BC34A; 
-            --bg-dark: #1a1a2e; 
-            --card-bg-light: rgba(255, 255, 255, 0.08); 
-            --text-light: #e0e0e0;
-            --text-muted: #b0b0b0;
-            --border-color: rgba(255, 255, 255, 0.15);
-            --error-color: #EF5350; 
+            --primary: #4ade80;
+            --primary-dark: #22c55e;
+            --accent: #3b82f6;
+            --bg-base: #020617;
+            --glass-bg: rgba(15, 23, 42, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
         }
 
         body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, var(--bg-dark) 0%, #0f0f1d 100%);
-            color: var(--text-light);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: radial-gradient(circle at 50% -20%, #1e293b 0%, var(--bg-base) 100%);
+            color: var(--text-main);
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            padding: 20px;
+            overflow-x: hidden;
         }
 
-        @keyframes containerPulse {
-            0% { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); border-color: var(--border-color); }
-            50% { box-shadow: 0 0 25px rgba(76, 175, 80, 0.2); border-color: rgba(76, 175, 80, 0.4); }
-            100% { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); border-color: var(--border-color); }
+        /* Animation de la bordure lumineuse */
+        @keyframes border-glow {
+            0%, 100% { border-color: var(--glass-border); box-shadow: 0 0 0 transparent; }
+            50% { border-color: var(--primary); box-shadow: 0 0 25px rgba(74, 222, 128, 0.15); }
         }
 
         .container {
-            background-color: var(--card-bg-light);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border-color);
-            border-radius: 18px;
-            padding: 2.5rem;
-            text-align: center;
-            max-width: 480px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: 32px;
+            padding: 3rem;
             width: 100%;
+            max-width: 500px;
+            position: relative;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .container.processing { animation: containerPulse 3s infinite ease-in-out; }
-
-        h1 { color: white; margin-bottom: 0.5rem; font-weight: 600; font-size: 1.8rem; }
-        .subtitle { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 2rem; }
-
-        /* Chronomètre */
-        .timer-display {
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 1.2rem;
-            color: var(--primary-end);
-            margin-bottom: 10px;
-            display: none;
-            font-weight: bold;
+        .container.active {
+            animation: border-glow 4s infinite ease-in-out;
+            transform: scale(1.01);
         }
 
-        .steps-container {
-            text-align: left;
-            background: rgba(0, 0, 0, 0.25);
-            border-radius: 12px;
-            padding: 18px;
-            margin-bottom: 20px;
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to bottom right, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: var(--text-dim);
+            font-size: 0.95rem;
+            margin-bottom: 2.5rem;
+        }
+
+        /* Chronomètre Stylisé */
+        .timer-box {
             display: none;
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(0, 0, 0, 0.4);
+            color: var(--primary);
+            padding: 10px 20px;
+            border-radius: 14px;
+            font-size: 1.4rem;
+            margin: 0 auto 2rem auto;
+            width: fit-content;
+            border: 1px solid rgba(74, 222, 128, 0.2);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        /* Checklist des 9 étapes */
+        .steps {
+            display: none;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 24px;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.03);
         }
 
         .step {
             display: flex;
             align-items: center;
-            gap: 12px;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-bottom: 10px;
-            transition: all 0.3s ease;
+            gap: 15px;
+            margin-bottom: 14px;
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            transition: all 0.4s;
         }
 
-        .step.active { color: white; font-weight: 600; transform: translateX(5px); }
-        .step.done { color: var(--primary-end); }
+        .step.current {
+            color: #fff;
+            transform: translateX(8px);
+        }
 
-        .bullet {
-            width: 20px; height: 20px;
-            border: 2px solid var(--border-color);
-            border-radius: 50%;
+        .step.done { color: var(--primary); }
+
+        .dot {
+            width: 22px;
+            height: 22px;
+            border: 2px solid var(--glass-border);
+            border-radius: 7px; /* Carré arrondi style iOS */
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 10px;
-            flex-shrink: 0;
+            font-size: 11px;
+            transition: 0.3s;
         }
 
-        .step.active .bullet { 
-            border-color: var(--primary-end); 
-            background: var(--primary-end);
-            box-shadow: 0 0 10px var(--primary-end);
+        .step.current .dot {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: var(--bg-base);
+            box-shadow: 0 0 15px var(--primary);
         }
-        
-        .step.done .bullet::before { content: "✓"; font-weight: bold; }
 
-        .upload-area {
-            border: 2px dashed var(--border-color);
-            padding: 2.5rem 1rem;
-            border-radius: 12px;
-            margin-bottom: 2rem;
+        .step.done .dot {
+            border-color: var(--primary);
+            background: rgba(74, 222, 128, 0.1);
+        }
+
+        .step.done .dot::after { content: "✓"; font-weight: bold; }
+
+        /* Zone d'upload élégante */
+        .upload-zone {
+            border: 2px dashed var(--glass-border);
+            padding: 3rem 1rem;
+            border-radius: 24px;
             cursor: pointer;
-            position: relative;
+            transition: 0.3s;
+            background: rgba(255,255,255,0.01);
         }
 
-        .progress-container {
+        .upload-zone:hover {
+            border-color: var(--accent);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+        /* Barre de progression fluide */
+        .progress-wrap {
             display: none;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            height: 10px;
-            margin-bottom: 20px;
+            height: 6px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
             overflow: hidden;
+            margin-bottom: 1.5rem;
         }
-        .progress-bar {
-            background: linear-gradient(90deg, var(--primary-start), var(--primary-end));
+
+        .progress-fill {
             width: 0%; height: 100%;
-            transition: width 0.5s ease;
+            background: linear-gradient(90deg, var(--accent), var(--primary));
+            box-shadow: 0 0 10px var(--primary);
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
+        /* Bouton & Download */
+        button {
+            background: #fff;
+            color: #000;
+            border: none;
+            padding: 18px;
+            width: 100%;
+            border-radius: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255,255,255,0.1);
+        }
+
+        button:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        .download-link {
+            display: block;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--accent), #1d4ed8);
+            color: white;
+            text-decoration: none;
+            border-radius: 16px;
+            font-weight: 600;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         .spinner {
             display: inline-block;
             width: 16px; height: 16px;
             border: 2px solid rgba(255,255,255,0.1);
+            border-top-color: var(--primary);
             border-radius: 50%;
-            border-top-color: var(--primary-end);
-            animation: spin 1s linear infinite;
-            margin-right: 10px;
+            animation: spin 0.8s linear infinite;
+            margin-right: 12px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-
-        button {
-            background: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-end) 100%);
-            color: white; border: none; padding: 16px; border-radius: 12px;
-            font-weight: 600; cursor: pointer; width: 100%; font-size: 1rem;
-        }
-        button:disabled { background: #2b2b3f; cursor: not-allowed; color: #6a6a7a; }
-
-        .btn-download {
-            display: block; padding: 16px;
-            background: #2563eb; color: white; text-decoration: none;
-            border-radius: 12px; font-weight: 600; text-align: center;
-        }
     </style>
 </head>
 <body>
 
-<div class="container" id="mainContainer">
-    <h1>Usine à .EXE 🚀</h1>
-    <p class="subtitle">Compilation Cloud en temps réel.</p>
+<div class="container" id="box">
+    <h1>Factory 01 🚀</h1>
+    <p class="subtitle">Transformation Web vers Exécutable</p>
 
-    <div class="timer-display" id="timer">00:00</div>
+    <div id="timer" class="timer-box">00:00</div>
 
-    <div class="upload-area" id="dropZone">
-        <input type="file" id="fileInput" accept=".zip">
-        <span id="fileLabel">📥 Sélectionnez votre ZIP pour commencer</span>
+    <div class="upload-zone" id="dropArea">
+        <input type="file" id="zipFile" accept=".zip">
+        <span id="label" style="color: var(--text-dim);">📥 Déposez votre archive <b>ZIP</b></span>
     </div>
 
-    <div class="steps-container" id="stepsContainer">
-        <div class="step" id="step1"><div class="bullet"></div> 1. Upload du projet</div>
-        <div class="step" id="step2"><div class="bullet"></div> 2. Initialisation GitHub</div>
-        <div class="step" id="step3"><div class="bullet"></div> 3. Extraction des sources</div>
-        <div class="step" id="step4"><div class="bullet"></div> 4. Configuration icône/nom</div>
-        <div class="step" id="step5"><div class="bullet"></div> 5. Préparation environnement</div>
-        <div class="step" id="step6"><div class="bullet"></div> 6. Installation dépendances</div>
-        <div class="step" id="step7"><div class="bullet"></div> 7. Compilation binaire (.exe)</div>
-        <div class="step" id="step8"><div class="bullet"></div> 8. Finalisation du package</div>
-        <div class="step" id="step9"><div class="bullet"></div> 9. Déploiement de la release</div>
+    <div class="steps" id="stepList">
+        <div class="step" id="s1"><div class="dot"></div> 1. Transmission Cloud</div>
+        <div class="step" id="s2"><div class="dot"></div> 2. Initialisation GitHub</div>
+        <div class="step" id="s3"><div class="dot"></div> 3. Extraction intelligente</div>
+        <div class="step" id="s4"><div class="dot"></div> 4. Injection des Assets</div>
+        <div class="step" id="s5"><div class="dot"></div> 5. Préparation Environnement</div>
+        <div class="step" id="s6"><div class="dot"></div> 6. Résolution Dépendances</div>
+        <div class="step" id="s7"><div class="dot"></div> 7. Compilation du Binaire</div>
+        <div class="step" id="s8"><div class="dot"></div> 8. Vérification Intégrité</div>
+        <div class="step" id="s9"><div class="dot"></div> 9. Génération Release</div>
     </div>
 
-    <div id="progressContainer" class="progress-container">
-        <div id="progressBar" class="progress-bar"></div>
+    <div class="progress-wrap" id="pWrap">
+        <div class="progress-fill" id="pFill"></div>
     </div>
 
-    <button id="btn" onclick="lancerProcessus()">Démarrer la fabrication</button>
+    <button id="goBtn" onclick="run()">Lancer la fabrication</button>
 
-    <div id="status" style="margin-top:20px; font-size:0.9rem; color:var(--text-muted);">
-        <span id="spinnerContainer" style="display:none;"><div class="spinner"></div></span>
-        <span id="statusText">Prêt.</span>
+    <div id="msg" style="margin-top:25px; font-size:0.9rem; color:var(--text-dim);">
+        <span id="spin" style="display:none;"><div class="spinner"></div></span>
+        <span id="txt">Système prêt.</span>
     </div>
 </div>
 
 <script>
-    let startTime;
-    let timerInterval;
-
-    const fileInput = document.getElementById('fileInput');
-    const btn = document.getElementById('btn');
-    const statusText = document.getElementById('statusText');
-    const timerDisplay = document.getElementById('timer');
-    const progressBar = document.getElementById('progressBar');
-    const mainContainer = document.getElementById('mainContainer');
-
-    fileInput.addEventListener('change', () => {
-        if (fileInput.files.length > 0) {
-            document.getElementById('fileLabel').innerHTML = `📦 <strong>${fileInput.files[0].name}</strong>`;
+    let seconds = 0;
+    let clock;
+    const fileIn = document.getElementById('zipFile');
+    const btn = document.getElementById('goBtn');
+    
+    fileIn.onchange = () => {
+        if(fileIn.files.length) {
+            document.getElementById('label').innerHTML = `<span style="color:var(--primary)">📦 ${fileIn.files[0].name} chargé</span>`;
             btn.disabled = false;
         }
-    });
+    };
 
     btn.disabled = true;
 
-    function startTimer() {
-        startTime = Date.now();
-        timerDisplay.style.display = 'block';
-        timerInterval = setInterval(() => {
-            const elapsed = Date.now() - startTime;
-            const minutes = Math.floor(elapsed / 60000);
-            const seconds = Math.floor((elapsed % 60000) / 1000);
-            timerDisplay.innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        }, 1000);
+    function updateStep(n, status) {
+        const el = document.getElementById('s'+n);
+        if(el) el.className = 'step ' + status;
     }
 
-    function setStep(num, state) {
-        const el = document.getElementById(`step${num}`);
-        if (el) {
-            el.classList.remove('active', 'done');
-            if (state === 'active') el.classList.add('active');
-            if (state === 'done') el.classList.add('done');
-        }
-    }
-
-    async function lancerProcessus() {
-        startTimer();
+    async function run() {
         btn.style.display = 'none';
-        mainContainer.classList.add('processing');
-        document.getElementById('spinnerContainer').style.display = 'inline-block';
-        document.getElementById('stepsContainer').style.display = 'block';
-        document.getElementById('progressContainer').style.display = 'block';
+        document.getElementById('box').classList.add('active');
+        document.getElementById('stepList').style.display = 'block';
+        document.getElementById('pWrap').style.display = 'block';
+        document.getElementById('spin').style.display = 'inline-block';
+        document.getElementById('timer').style.display = 'block';
+
+        clock = setInterval(() => {
+            seconds++;
+            let m = Math.floor(seconds/60).toString().padStart(2,'0');
+            let s = (seconds%60).toString().padStart(2,'0');
+            document.getElementById('timer').innerText = `${m}:${s}`;
+        }, 1000);
 
         try {
-            setStep(1, 'active');
-            statusText.innerText = "Téléchargement vers le serveur...";
+            updateStep(1, 'current');
+            document.getElementById('txt').innerText = "Téléchargement...";
             
-            // Simulation des appels API (à remplacer par vos vrais fetch)
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-            const uploadRes = await fetch('https://tmpfiles.org/api/v1/upload', { method: 'POST', body: formData });
-            const uploadData = await uploadRes.json();
-            const publicUrl = uploadData.data.url.replace('https://tmpfiles.org/', 'https://tmpfiles.org/dl/');
-            setStep(1, 'done');
+            const fd = new FormData();
+            fd.append('file', fileIn.files[0]);
+            const up = await fetch('https://tmpfiles.org/api/v1/upload', {method:'POST', body:fd});
+            const upData = await up.json();
+            const url = upData.data.url.replace('tmpfiles.org/', 'tmpfiles.org/dl/');
+            updateStep(1, 'done');
 
-            setStep(2, 'active');
-            statusText.innerText = "Lancement de l'usine GitHub...";
-            const githubRes = await fetch('/api/run-build', {
+            updateStep(2, 'current');
+            document.getElementById('txt').innerText = "Signal envoyé à GitHub...";
+            await fetch('/api/run-build', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ zip_url: publicUrl })
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ zip_url: url })
             });
-            setStep(2, 'done');
+            updateStep(2, 'done');
 
-            // Boucle de vérification
-            let currentCompStep = 3;
-            setStep(currentCompStep, 'active');
+            let step = 3;
+            const poller = setInterval(async () => {
+                const check = await fetch('/api/check-build');
+                const res = await check.json();
 
-            const check = setInterval(async () => {
-                const res = await fetch('/api/check-build');
-                const data = await res.json();
-
-                if (data.status === 'success') {
-                    clearInterval(check);
-                    clearInterval(timerInterval);
-                    for(let i=3; i<=9; i++) setStep(i, 'done');
-                    progressBar.style.width = "100%";
-                    mainContainer.classList.remove('processing');
-                    document.getElementById('spinnerContainer').style.display = 'none';
-                    statusText.innerHTML = `<a href="${data.url}" class="btn-download">💾 TÉLÉCHARGER LE .EXE</a>`;
+                if(res.status === 'success') {
+                    clearInterval(poller);
+                    clearInterval(clock);
+                    for(let i=3; i<=9; i++) updateStep(i, 'done');
+                    document.getElementById('pFill').style.width = "100%";
+                    document.getElementById('box').classList.remove('active');
+                    document.getElementById('spin').style.display = 'none';
+                    document.getElementById('txt').innerHTML = `<a href="${res.url}" class="download-link">⬇️ RÉCUPÉRER L'APPLICATION</a>`;
                 } else {
-                    if (currentCompStep < 8) {
-                        setStep(currentCompStep, 'done');
-                        currentCompStep++;
-                        setStep(currentCompStep, 'active');
-                        progressBar.style.width = (20 + (currentCompStep * 9)) + "%";
-                        statusText.innerText = `Travail en cours...`;
+                    if(step < 9) {
+                        updateStep(step, 'done');
+                        step++;
+                        updateStep(step, 'current');
+                        document.getElementById('pFill').style.width = (step * 11) + "%";
+                        document.getElementById('txt').innerText = "Calculs en cours sur les serveurs...";
                     }
                 }
             }, 10000);
 
-        } catch (e) {
-            statusText.innerText = "Erreur fatale.";
-            clearInterval(timerInterval);
+        } catch(e) {
+            document.getElementById('txt').innerText = "Erreur système : " + e.message;
+            clearInterval(clock);
         }
     }
 </script>
