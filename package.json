@@ -6,21 +6,23 @@
     "build": "electron-builder --win"
   },
   "devDependencies": {
-    "electron": "latest",
-    "electron-builder": "latest"
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
   },
   "build": {
-    "appId": "com.monusine.app",
-    "productName": "Mon Application Web",
+    "appId": "com.cloudfactory.app",
+    "productName": "APP_NAME_PLACEHOLDER",
     "directories": {
       "output": "dist"
     },
     "win": {
-      "target": "portable"
+      "target": "portable",
+      "icon": "app_icon.ico"
     },
     "files": [
       "main.js",
-      "src/**/*"
+      "src/**/*",
+      "app_icon.ico"
     ]
   }
 }
