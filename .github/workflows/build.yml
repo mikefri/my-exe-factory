@@ -21,15 +21,35 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
-          # J'ai supprimé la ligne "cache" qui causait l'erreur 🚀
+          # Cache supprimé pour éviter les erreurs de permission lors du build
 
       - name: Download and Extract
         shell: pwsh
         run: |
-          curl -L -o site.zip "${{ github.event.inputs.zip_url }}"
+          $url = "${{ github.event.inputs.zip_url }}"
+          Write-Host "Téléchargement depuis : $url"
+          
+          # Utilisation de Invoke-WebRequest pour un téléchargement plus stable sur Windows
+          Invoke-WebRequest -Uri $url -OutFile "site.zip"
+          
+          # Vérification de l'existence et de la taille du fichier (min 100 octets)
+          if (!(Test-Path "site.zip") -or (Get-Item "site.zip").Length -lt 100) {
+            Write-Error "Le fichier ZIP est introuvable ou corrompu. Vérifiez l'URL."
+            exit 1
+          }
+
+          # Nettoyage et création du dossier src
           if (Test-Path "src") { Remove-Item -Recurse -Force "src" }
           New-Item -ItemType Directory -Path "src"
-          Expand-Archive -Path "site.zip" -DestinationPath "src" -Force
+          
+          # Extraction avec gestion d'erreur
+          try {
+            Expand-Archive -Path "site.zip" -DestinationPath "src" -Force
+            Write-Host "Extraction réussie."
+          } catch {
+            Write-Error "Impossible d'extraire le fichier ZIP. Format invalide ?"
+            exit 1
+          }
 
       - name: Install and Build EXE
         shell: cmd
@@ -40,9 +60,11 @@ jobs:
       - name: Prepare Release File
         shell: pwsh
         run: |
+          # Recherche récursive du fichier .exe dans le dossier dist
           $exe = Get-ChildItem -Path "dist" -Filter "*.exe" -Recurse | Select-Object -First 1
           if ($exe) {
             Copy-Item $exe.FullName -Destination "Application_Web.exe"
+            Write-Host "Fichier prêt : Application_Web.exe"
           } else {
             Write-Error "Compilation réussie mais aucun .exe trouvé dans le dossier dist."
             exit 1
