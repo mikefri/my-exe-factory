@@ -3,21 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web2Exe Cloud Factory</title>
+    <title>EXE Factory 🚀 | Cloud Edition</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
 
         :root {
-            --primary: #00dc82; /* Vert néon moderne */
+            --primary: #00dc82; 
             --primary-glow: rgba(0, 220, 130, 0.3);
             --bg-dark: #0a0a14;
             --card-bg: rgba(255, 255, 255, 0.05);
             --text-main: #ffffff;
             --text-dim: #94a3b8;
             --error: #ff4757;
+            --input-bg: rgba(255, 255, 255, 0.07);
         }
 
-        * { box-sizing: border-box; transition: all 0.3s ease; }
+        * { box-sizing: border-box; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
 
         body {
             font-family: 'Poppins', sans-serif;
@@ -28,194 +29,157 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            overflow: hidden;
+            padding: 20px;
         }
 
-        /* Arrière-plan animé */
+        /* Aura lumineuse en arrière-plan */
         body::before {
             content: "";
             position: absolute;
-            width: 300px;
-            height: 300px;
+            width: 400px; height: 400px;
             background: var(--primary);
             filter: blur(150px);
             border-radius: 50%;
             z-index: -1;
-            opacity: 0.15;
-            animation: move 10s infinite alternate;
+            opacity: 0.1;
+            animation: move 15s infinite alternate;
         }
 
-        @keyframes move {
-            from { transform: translate(-50%, -50%); }
-            to { transform: translate(50%, 50%); }
-        }
+        @keyframes move { from { transform: translate(-30%, -30%); } to { transform: translate(30%, 30%); } }
 
         .container {
             background: var(--card-bg);
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(25px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
-            padding: 3rem;
+            border-radius: 28px;
+            padding: 2.5rem;
             width: 100%;
-            max-width: 480px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            max-width: 500px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
             text-align: center;
         }
 
         h1 {
-            font-weight: 700;
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
+            font-weight: 700; font-size: 2.2rem; margin: 0 0 0.5rem 0;
             background: linear-gradient(to right, #fff, var(--primary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
 
         .subtitle { color: var(--text-dim); font-size: 0.9rem; margin-bottom: 2rem; }
 
-        /* Zone d'upload stylisée */
+        /* Configuration des champs */
+        .config-section { text-align: left; margin-bottom: 1.5rem; }
+        .config-group { margin-bottom: 1rem; }
+        
+        label { display: block; font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; margin-left: 4px; }
+
+        input[type="text"] {
+            width: 100%; padding: 12px 16px; border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1); background: var(--input-bg);
+            color: white; font-size: 0.95rem; outline: none;
+        }
+        input[type="text"]:focus { border-color: var(--primary); box-shadow: 0 0 10px var(--primary-glow); }
+
+        /* Zone d'upload Icône simplifiée */
+        .icon-upload-wrapper {
+            background: var(--input-bg); border: 1px dashed rgba(255,255,255,0.2);
+            border-radius: 12px; padding: 10px; cursor: pointer; position: relative;
+        }
+        .icon-upload-wrapper input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+        .icon-label { font-size: 0.85rem; color: var(--text-dim); display: flex; align-items: center; gap: 8px; }
+
+        /* Zone d'upload ZIP principale */
         .upload-area {
             border: 2px dashed rgba(255, 255, 255, 0.2);
-            border-radius: 16px;
-            padding: 2.5rem 1rem;
-            cursor: pointer;
-            position: relative;
-            background: rgba(255, 255, 255, 0.02);
+            border-radius: 20px; padding: 2rem 1rem; cursor: pointer;
+            position: relative; background: rgba(255, 255, 255, 0.02);
+            margin-bottom: 2rem;
         }
+        .upload-area:hover, .upload-area.dragover { border-color: var(--primary); background: rgba(0, 220, 130, 0.05); transform: translateY(-2px); }
+        .upload-icon { font-size: 2rem; display: block; margin-bottom: 10px; }
+        #fileInput { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 
-        .upload-area:hover, .upload-area.dragover {
-            border-color: var(--primary);
-            background: rgba(0, 220, 130, 0.05);
-            transform: scale(1.02);
-        }
+        /* Progrès et Boutons */
+        .progress-container { display: none; height: 10px; background: rgba(255, 255, 255, 0.1); border-radius: 20px; margin: 2rem 0; overflow: hidden; }
+        .progress-bar { height: 100%; width: 0%; background: var(--primary); box-shadow: 0 0 15px var(--primary-glow); }
 
-        .upload-icon { font-size: 2.5rem; display: block; margin-bottom: 10px; }
-
-        input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-
-        /* Barre de progression moderne */
-        .progress-container {
-            display: none;
-            height: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            margin: 2rem 0;
-            overflow: hidden;
-        }
-
-        .progress-bar {
-            height: 100%;
-            width: 0%;
-            background: var(--primary);
-            box-shadow: 0 0 15px var(--primary-glow);
-            border-radius: 10px;
-        }
-
-        /* Boutons */
         .btn-main {
-            background: var(--primary);
-            color: #000;
-            border: none;
-            padding: 1rem 2rem;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            width: 100%;
-            box-shadow: 0 4px 15px var(--primary-glow);
+            background: var(--primary); color: #000; border: none; padding: 1.1rem;
+            border-radius: 14px; font-weight: 700; font-size: 1rem; cursor: pointer;
+            width: 100%; box-shadow: 0 4px 20px var(--primary-glow);
         }
-
-        .btn-main:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px var(--primary-glow);
-        }
-
-        .btn-main:disabled {
-            background: #2d2d3d;
-            color: #555;
-            box-shadow: none;
-            cursor: not-allowed;
-        }
+        .btn-main:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 10px 30px var(--primary-glow); }
+        .btn-main:disabled { background: #2d2d3d; color: #555; box-shadow: none; cursor: not-allowed; }
 
         .btn-download {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            background: #fff;
-            color: #000;
-            text-decoration: none;
-            padding: 1rem;
-            border-radius: 12px;
-            font-weight: 700;
-            margin-top: 1rem;
-            animation: pulse 2s infinite;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            background: #fff; color: #000; text-decoration: none; padding: 1.1rem;
+            border-radius: 14px; font-weight: 800; margin-top: 1rem; animation: pulse 2s infinite;
         }
 
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.03); }
-            100% { transform: scale(1); }
-        }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
 
-        #status {
-            margin-top: 1.5rem;
-            font-size: 0.85rem;
-            color: var(--text-dim);
-            min-height: 1.2rem;
-        }
-
-        /* Animation de chargement pendant le build */
-        .loader-dots::after {
-            content: "...";
-            animation: dots 1.5s steps(5, end) infinite;
-        }
-        @keyframes dots { 0%, 20% { content: "."; } 40% { content: ".."; } 60% { content: "..."; } }
+        #status { margin-top: 1.5rem; font-size: 0.85rem; color: var(--text-dim); }
+        .loader-dots::after { content: "..."; animation: dots 1.5s infinite; }
+        @keyframes dots { 0% { content: "."; } 33% { content: ".."; } 66% { content: "..."; } }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>EXE Factory 🚀</h1>
-    <p class="subtitle">Convertissez votre projet Web en application native en un clic.</p>
+    <p class="subtitle">Créez votre application Windows avec nom et icône personnalisés.</p>
+
+    <div class="config-section">
+        <div class="config-group">
+            <label>Nom de l'application</label>
+            <input type="text" id="appNameInput" placeholder="Ex: MonLogiciel">
+        </div>
+
+        <div class="config-group">
+            <label>Icône (.ico) - Optionnel</label>
+            <div class="icon-upload-wrapper">
+                <input type="file" id="iconInput" accept=".ico">
+                <span class="icon-label" id="iconLabel">🎨 Choisir un fichier .ico</span>
+            </div>
+        </div>
+    </div>
 
     <div class="upload-area" id="dropZone">
         <input type="file" id="fileInput" accept=".zip">
         <span class="upload-icon">📦</span>
-        <span id="fileLabel" class="file-label">Glissez votre <b>ZIP</b> ici ou cliquez</span>
+        <span id="fileLabel">Glissez votre projet <b>ZIP</b> ou cliquez</span>
     </div>
 
     <div id="progressContainer" class="progress-container">
         <div id="progressBar" class="progress-bar"></div>
     </div>
 
-    <button id="btn" class="btn-main" onclick="lancerProcessus()">Générer l'application</button>
+    <button id="btn" class="btn-main" onclick="lancerProcessus()">Lancer la fabrication</button>
 
-    <div id="status">En attente de fichier...</div>
+    <div id="status">Prêt à transformer vos idées.</div>
 </div>
 
 <script>
     const fileInput = document.getElementById('fileInput');
-    const fileLabel = document.getElementById('fileLabel');
-    const btn = document.getElementById('btn');
+    const iconInput = document.getElementById('iconInput');
+    const appNameInput = document.getElementById('appNameInput');
     const statusDiv = document.getElementById('status');
+    const btn = document.getElementById('btn');
     const progressBar = document.getElementById('progressBar');
     const progressContainer = document.getElementById('progressContainer');
-    const dropZone = document.getElementById('dropZone');
 
-    // Gestion du drag & drop visuel
-    ['dragenter', 'dragover'].forEach(name => {
-        dropZone.addEventListener(name, () => dropZone.classList.add('dragover'));
-    });
-    ['dragleave', 'drop'].forEach(name => {
-        dropZone.addEventListener(name, () => dropZone.classList.remove('dragover'));
-    });
-
+    // Mise à jour visuelle des fichiers sélectionnés
     fileInput.addEventListener('change', () => {
         if (fileInput.files.length > 0) {
-            fileLabel.innerHTML = `Prêt : <b>${fileInput.files[0].name}</b>`;
+            document.getElementById('fileLabel').innerHTML = `Site chargé : <b>${fileInput.files[0].name}</b>`;
             btn.disabled = false;
-            statusDiv.innerText = "Fichier chargé. Prêt pour la fabrication.";
+        }
+    });
+
+    iconInput.addEventListener('change', () => {
+        if (iconInput.files.length > 0) {
+            document.getElementById('iconLabel').innerHTML = `✅ Icône : ${iconInput.files[0].name}`;
         }
     });
 
@@ -232,36 +196,52 @@
 
     async function lancerProcessus() {
         const file = fileInput.files[0];
+        const iconFile = iconInput.files[0];
+        const appName = appNameInput.value.trim() || "WebToExeApp";
+
         if (!file) return;
 
         btn.disabled = true;
         btn.innerText = "Fabrication en cours...";
         progressContainer.style.display = "block";
-        updateProgress(5, "⏳ Préparation...");
+        updateProgress(5, "⏳ Initialisation...");
 
         try {
-            // 1. Upload
-            updateProgress(20, "☁️ Téléchargement vers le Cloud...");
+            // 1. Upload du ZIP
+            updateProgress(15, "☁️ Téléchargement du code source...");
             const formData = new FormData();
             formData.append('file', file);
             const uploadRes = await fetch('https://tmpfiles.org/api/v1/upload', { method: 'POST', body: formData });
-            
-            if (!uploadRes.ok) throw new Error("Erreur d'envoi");
             const uploadData = await uploadRes.json();
             const publicZipUrl = uploadData.data.url.replace('https://tmpfiles.org/', 'https://tmpfiles.org/dl/');
 
-            // 2. GitHub
-            updateProgress(50, "🚀 Activation de l'usine distante...");
+            // 2. Upload de l'ICÔNE (si elle existe)
+            let publicIconUrl = "";
+            if (iconFile) {
+                updateProgress(30, "🎨 Traitement de l'icône...");
+                const iconFormData = new FormData();
+                iconFormData.append('file', iconFile);
+                const iconRes = await fetch('https://tmpfiles.org/api/v1/upload', { method: 'POST', body: iconFormData });
+                const iconData = await iconRes.json();
+                publicIconUrl = iconData.data.url.replace('https://tmpfiles.org/', 'https://tmpfiles.org/dl/');
+            }
+
+            // 3. Appel à votre API (Node.js/GitHub)
+            updateProgress(50, "🚀 Mise en route de l'usine distante...");
             const githubRes = await fetch('/api/run-build', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ zip_url: publicZipUrl })
+                body: JSON.stringify({ 
+                    zip_url: publicZipUrl, 
+                    app_name: appName,
+                    icon_url: publicIconUrl 
+                })
             });
 
-            if (!githubRes.ok) throw new Error("GitHub Factory injoignable");
+            if (!githubRes.ok) throw new Error("Usine GitHub indisponible.");
 
-            // 3. Attente Status
-            updateProgress(75, "<span class='loader-dots'>🏗️ Compilation en cours</span>");
+            // 4. Boucle d'attente du résultat
+            updateProgress(75, "<span class='loader-dots'>🏗️ Compilation du .EXE</span>");
             
             setTimeout(() => {
                 const checkInterval = setInterval(async () => {
@@ -271,21 +251,21 @@
 
                         if (checkData.status === 'success' && checkData.url) {
                             clearInterval(checkInterval);
-                            updateProgress(100, "✅ Compilation terminée avec succès !");
-                            statusDiv.innerHTML = `<a href="${checkData.url}" class="btn-download">💾 TÉLÉCHARGER LE .EXE (Windows)</a>`;
+                            updateProgress(100, "✅ Votre application est prête !");
+                            statusDiv.innerHTML = `<a href="${checkData.url}" class="btn-download">💾 TÉLÉCHARGER ${appName.toUpperCase()}.EXE</a>`;
                             btn.style.display = 'none';
                         } else {
                             let w = parseFloat(progressBar.style.width);
                             if (w < 98) progressBar.style.width = (w + 0.3) + "%";
                         }
-                    } catch (e) { console.log("Recherche du fichier..."); }
+                    } catch (e) { console.warn("Attente du build..."); }
                 }, 8000);
             }, 5000);
 
         } catch (error) {
             updateProgress(100, `❌ Erreur : ${error.message}`, true);
             btn.disabled = false;
-            btn.innerText = "Réessayer la fabrication";
+            btn.innerText = "Réessayer";
         }
     }
 </script>
