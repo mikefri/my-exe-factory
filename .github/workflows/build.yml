@@ -21,33 +21,41 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
-          # Cache supprimé pour éviter les erreurs de permission lors du build
 
       - name: Download and Extract
         shell: pwsh
         run: |
           $url = "${{ github.event.inputs.zip_url }}"
-          Write-Host "Téléchargement depuis : $url"
+          Write-Host "Tentative de téléchargement depuis : $url"
           
-          # Utilisation de Invoke-WebRequest pour un téléchargement plus stable sur Windows
-          Invoke-WebRequest -Uri $url -OutFile "site.zip"
+          # Utilisation d'un User-Agent pour éviter d'être bloqué par l'hébergeur
+          $session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+          $session.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
           
-          # Vérification de l'existence et de la taille du fichier (min 100 octets)
-          if (!(Test-Path "site.zip") -or (Get-Item "site.zip").Length -lt 100) {
-            Write-Error "Le fichier ZIP est introuvable ou corrompu. Vérifiez l'URL."
+          try {
+            Invoke-WebRequest -Uri $url -OutFile "site.zip" -WebSession $session -MaximumRedirection 5
+          } catch {
+            Write-Error "Le téléchargement a échoué : $_"
+            exit 1
+          }
+          
+          # Vérification magique : un ZIP doit commencer par les lettres 'PK'
+          $content = Get-Content "site.zip" -Encoding Byte -TotalCount 2
+          if ($content[0] -ne 0x50 -or $content[1] -ne 0x4B) {
+            Write-Host "--- DEBUG : CONTENU DU FICHIER REÇU ---"
+            Get-Content "site.zip" -Head 10 # Affiche le début du fichier pour voir si c'est du HTML
+            Write-Error "Le fichier téléchargé n'est pas un ZIP valide (Signature PK manquante)."
             exit 1
           }
 
-          # Nettoyage et création du dossier src
           if (Test-Path "src") { Remove-Item -Recurse -Force "src" }
           New-Item -ItemType Directory -Path "src"
           
-          # Extraction avec gestion d'erreur
           try {
             Expand-Archive -Path "site.zip" -DestinationPath "src" -Force
-            Write-Host "Extraction réussie."
+            Write-Host "Extraction réussie !"
           } catch {
-            Write-Error "Impossible d'extraire le fichier ZIP. Format invalide ?"
+            Write-Error "Échec final de l'extraction."
             exit 1
           }
 
@@ -60,13 +68,12 @@ jobs:
       - name: Prepare Release File
         shell: pwsh
         run: |
-          # Recherche récursive du fichier .exe dans le dossier dist
           $exe = Get-ChildItem -Path "dist" -Filter "*.exe" -Recurse | Select-Object -First 1
           if ($exe) {
             Copy-Item $exe.FullName -Destination "Application_Web.exe"
             Write-Host "Fichier prêt : Application_Web.exe"
           } else {
-            Write-Error "Compilation réussie mais aucun .exe trouvé dans le dossier dist."
+            Write-Error "Aucun .exe trouvé dans le dossier dist."
             exit 1
           }
 
