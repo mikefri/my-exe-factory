@@ -1,46 +1,57 @@
 export default async function handler(req, res) {
   try {
-    // 1. On vérifie d'abord l'état du dernier build dans GitHub Actions
-    const runsRes = await fetch('https://api.github.com/repos/mikefri/my-exe-factory/actions/runs?per_page=1', {
-      headers: { 
-        'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`,
-        'Accept': 'application/vnd.github.v3+json'
-      }
-    });
-    const runsData = await runsRes.json();
-    const latestRun = runsData.workflow_runs[0];
+    const headers = {
+      'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`,
+      'Accept': 'application/vnd.github.v3+json'
+    };
 
-    // Si un build est en cours (status n'est pas 'completed'), on dit au site d'attendre
-    if (latestRun && latestRun.status !== 'completed') {
+    const runsRes = await fetch(
+      'https://api.github.com/repos/mikefri/my-exe-factory/actions/runs?per_page=1',
+      { headers }
+    );
+
+    if (!runsRes.ok) {
+      const err = await runsRes.text();
+      return res.status(500).json({ error: `GitHub runs API: ${runsRes.status} - ${err}` });
+    }
+
+    const runsData = await runsRes.json();
+    const runs = runsData.workflow_runs;
+
+    if (!runs || runs.length === 0) {
       return res.status(200).json({ status: 'building', url: null });
     }
 
-    // 2. Seulement si le build est fini, on cherche l'exécutable dans les releases
-    const response = await fetch('https://api.github.com/repos/mikefri/my-exe-factory/releases', {
-      headers: { 
-        'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`,
-        'Accept': 'application/vnd.github.v3+json'
-      }
-    });
+    const latestRun = runs[0];
 
-    const releases = await response.json();
+    if (latestRun.status !== 'completed') {
+      return res.status(200).json({ status: 'building', url: null });
+    }
+
+    // Build terminé → chercher le .exe
+    const relRes = await fetch(
+      'https://api.github.com/repos/mikefri/my-exe-factory/releases',
+      { headers }
+    );
+
+    if (!relRes.ok) {
+      return res.status(200).json({ status: 'building', url: null });
+    }
+
+    const releases = await relRes.json();
 
     if (!Array.isArray(releases) || releases.length === 0) {
       return res.status(200).json({ status: 'building', url: null });
     }
 
-    // On cherche le .exe dans la release la plus récente
-    const latestRelease = releases[0];
-    const asset = latestRelease.assets.find(a => a.name.endsWith('.exe'));
+    const asset = releases[0].assets.find(a => a.name.endsWith('.exe'));
 
     if (asset) {
-      return res.status(200).json({ 
-        status: 'success', 
-        url: asset.browser_download_url 
-      });
+      return res.status(200).json({ status: 'success', url: asset.browser_download_url });
     }
 
     return res.status(200).json({ status: 'building', url: null });
+
   } catch (e) {
     return res.status(500).json({ error: e.message });
   }
